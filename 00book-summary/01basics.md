@@ -27,6 +27,7 @@ cout << "Hello, World!" << std::endl; // endl이라고만 쓰면 에러가 발�
 * C++17에서는 Nested Namespace를 지원하는 방법이 바뀜
   * 전자는 C++17 이후 지원하는 Nested Namespace
   * 후자는 과거 버전부터 지원되는 Nested Namespace
+
 ```CPP
 namespace MyLib::Net::FTP {
 // ...
@@ -35,17 +36,18 @@ namespace MyLib::Net::FTP {
 
 ```CPP
 namespace MyLib {
-	namespace Net {
-		namespace FTP {
-			// ...
-		}
-	}
+  namespace Net {
+    namespace FTP {
+      // ...
+    }
+  }
 }
 ```
 
 * Nested Namespace의 에일리어스 (alias)를 정의할 수 있음
   * 이름은 정의할 수 없음
-```
+
+```CPP
 namespace MyFTP = MyLib::Net::FTP;
 ```
 
@@ -71,7 +73,6 @@ someFloat = someLong + 0.785f;                        // 5.14e+06
 someDouble = static_cast<double>(someFloat) / 100000; // 51.4
 cout << someDouble << endl;                           // 51.4
 ```
-
 
 * `enum` 선언 방법
   1. `enum` 타입을 이용하는 법
@@ -220,6 +221,8 @@ myVariabvleSizedArray = nullptr; // C++11부터 도입된 Keyword (C++11 전에�
   * 후자는 C++14이전부터 쓰던 방법 (일관성 면에서는 후자가 낫긴 함)
 
 ```CPP
+#include <memory>
+
 // Employee 인스턴스를 위한 공간을 하나 잡아 스마트 포인터를 리턴
 auto anEmployee = make_unique<Employee>();
 auto anEmployee = make_shared<Employee>();
@@ -246,7 +249,7 @@ shared_ptr<Employee[]> employees(new Employee[10]);
 * C++에서 `const`의 미묘함은 인터뷰 질문으로 적절함
   * 단순히 대상을 변경할 수 없는 게 아니라, `const`가 붙음으로써 동작을 제한하기 때문
 
-```
+```CPP
 void mysteryFunction(const std::string* someString) // 인터페이스에서 someString을 수정하지 않겠다고 선언한 것이나 다를 바 없음. 새로 문자열을 대입하면 새로운 주소에 할당되어야 할테니...
 {
   *someString = "Test"; // Will not compile.
@@ -375,4 +378,244 @@ const auto& f2 = foo() // const, &를 붙였으므로 복사 없이 수정 불�
 int x = 123;
 decltype(x) y = 456; // x의 타입을 보고 y를 int라고 판단함
 decltype(foo()) f2 = foo(); // foo()의 타입을 보고 const string&이라고 추론함
+```
+
+* 클래스
+  * **클래스**는 객체의 특징을 정의한다.
+  * 데이터 멤버 (data member, 속성)와 메소드 (method, behavior)가 선언됨
+  * 이 책에서는 데이터 멤버의 이름 앞에 `m`을 붙임
+  * 객체의 데이터 멤버를 수정하지 않는 함수는 `const`를 붙여서 선언하는 걸 추천
+    * 이런 함수를 **inspector**라고 부름
+    * 데이터 멤버를 수정하는 함수는 **mutator**라고 부름
+
+```CPP
+// AirlineTicket.h
+#include <string>
+
+class AirlineTicket
+{
+  public:
+    AirlineTicket(); // 생성자 (constructor)
+    ~AirlineTicket(); // 소멸자 (destructor)
+
+    double calculatePriceInDollars() const;
+
+    const std::string& getPassengerName() const;
+    void setPassengerName(const std::string& name);
+
+    int getNumberOfMiles() const;
+    void setNumberOfMiles(int miles);
+
+    bool hasEliteSuperRewardsStatus() const;
+    void setHasEliteSuperRewardsStatus(bool status);
+  private:
+    std::string mPassengerName;
+    int mNumberOfMiles;
+    bool mHasEliteSuperRewardsStatus;
+};
+
+// AirlineTicket.cpp
+
+using namespace std;
+
+AirlineTicket::AirlineTicket()
+  : mPassengerName("Unknown Passenger")
+  , mNumberOfMiles(0)
+  , mHasEliteSuperRewardsStatus(false)
+{
+}
+
+또는
+
+// AirlineTicket.cpp
+AirlineTicket::AirlineTicket()
+{
+  // Initialize data members
+  mPassengerName = "Unknown Passenger";
+  mNumberOfMiles = 0;
+  mHasEliteSuperRewardsStatus = false;
+}
+
+// -----------------------------------
+
+AirlineTicket::~AirlineTicket()
+{
+  // Nothing much to do in terms of cleanup
+}
+
+double AirlineTicket::calculatePriceInDollars() const
+{
+  if (hasEliteSuperRewardsStatus()) {
+    // Elite Super Rewards customers fly for free!
+    return 0;
+  }
+  // The cost of the ticket is the number of miles times 0.1.
+  // Real airlines probably have a more complicated formula!
+  return getNumberOfMiles() * 0.1;
+}
+
+const string& AirlineTicket::getPassengerName() const
+{
+  return mPassengerName;
+}
+
+void AirlineTicket::setPassengerName(const string& name)
+{
+  mPassengerName = name;
+}
+
+// Other get and set methods omitted for brevity.
+```
+
+* 클래스 정의 내에 바로 데이터 멤버를 초기화할 수도 있음
+
+```CPP
+// AirlineTicket.h
+#include <string>
+
+class AirlineTicket
+{
+  public:
+    AirlineTicket(); // 생성자 (constructor)
+    ~AirlineTicket(); // 소멸자 (destructor)
+
+    double calculatePriceInDollars() const;
+
+    const std::string& getPassengerName() const;
+    void setPassengerName(const std::string& name);
+
+    int getNumberOfMiles() const;
+    void setNumberOfMiles(int miles);
+
+    bool hasEliteSuperRewardsStatus() const;
+    void setHasEliteSuperRewardsStatus(bool status);
+  private:
+    std::string mPassengerName = "Unknown Passenger";
+    int mNumberOfMiles = 0;
+    bool mHasEliteSuperRewardsStatus = false;
+};
+```
+
+* 클래스 사용 코드
+
+```CPP
+// main_AirlineTicket.cpp
+...
+AirlineTicket myTicket; // Stack-based AirlineTicket
+myTicket.setPassengerName("Sherman T. Socketwrench");
+myTicket.setNumberOfMiles(700);
+double cost = myTicket.calculatePriceInDollars();
+cout << "This ticket will cost $" << cost << endl;
+
+// Heap-based AirlineTicket with smart pointer
+auto myTicket2 = make_unique<AirlineTicket>();
+myTicket2->setPassengerName("Laudimore M. Hallidue");
+myTicket2->setNumberOfMiles(2000);
+myTicket2->setHasEliteSuperRewardsStatus(true);
+double cost2 = myTicket2->calculatePriceInDollars();
+cout << "This other ticket will cost $" << cost2 << endl;
+// No need to delete myTicket2, happens automatically
+
+// Heap-based AirlineTicket without smart pointer (not recommended)
+AirlineTicket* myTicket3 = new AirlineTicket();
+// ... Use ticket 3
+delete myTicket3; // delete the heap object!
+```
+
+* 클래스와 구조체의 동일한 초기화 (uniform initialization) 방법 지원
+
+```CPP
+struct CircleStruct
+{
+  int x, y;
+  double radius;
+};
+
+class CircleClass
+{
+  public:
+    CircleClass(int x, int y, double radius)
+      : mX(x), mY(y), mRadius(radius) {}
+  private:
+    int mX, mY;
+    double mRadius;
+};
+
+// C++11 전에서는 구조체와 클래스의 초기화 방법이 달라야 함
+CircleStruct myCircle1 = {10, 10, 2.5};
+CircleClass myCircle2(10, 10, 2.5);
+
+// 동일한 초기화 (uniform initialization)에 따라 C++11 이후에서는 구조체와 클래스의 초기화는 같아도 됨
+CircleStruct myCircle3 = {10, 10, 2.5};
+CircleClass myCircle4 = {10, 10, 2.5};
+
+// =을 생략해도 됨
+CircleStruct myCircle5{10, 10, 2.5};
+CircleClass myCircle6{10, 10, 2.5};
+
+// 변수를 초기화 하는 방법
+int a = 3;
+int b(3);
+int c = {3}; // Uniform initialization
+int d{3}; // Uniform initialization
+
+// 클래스 생성자에서 초기화하는 방법
+class MyClass
+{
+  public:
+    MyClass() : mArray{0, 1, 2, 3} {}
+  private:
+    int mArray[4];
+};
+
+// zero-initializtion을 하는 방법
+// Zero-initialization constructs objects with the default constructor, and initializes primitive integer types (such as char, int, and so on) to zero, primitive floating-point types to 0.0, and pointer types to nullptr.
+int e{}; // Uniform initialization, e will be 0
+```
+
+* 동일한 초기화는 C++가 값을 자동적으로 truncate하는 narrowing을 방지함
+  * C++11 표준을 컴파일러가 준수한다면 다음 코드는 에러를 발생시킴
+
+```CPP
+// 에러 없는 코드
+void func(int i) { /* ... */ }
+
+int main()
+{
+  int x = 3.14;
+  func(3.14);
+}
+
+// 에러 발생 코드
+void func(int i) { /* ... */ }
+
+int main()
+{
+  int x = {3.14}; // Error because narrowing
+  func({3.14}); // Error because narrowing
+}
+```
+
+* 직접 리스트 초기화 vs. 복사를 통한 리스트 초기화
+  * 복사를 통한 리스트 초기화 `T obj = {arg1, arg2, ...};`
+  * 직접 리스트 초기화 `T obj {arg1, arg2, ...};` (C++17에서 차이가 발생함)
+
+```CPP
+// C++17에서는 다음과 같이 동작한다.
+// Copy list initialization
+auto a = {11};      // initializer_list<int>
+auto b = {11, 22};  // initializer_list<int>
+auto b = {11, 22.33}; // Compilation error (리스트 내의 원소는 같은 타입이어야 하기 때문)
+
+// Direct list initialization
+auto c {11};        // int
+auto d {11, 22};    // Error, too many elements.
+
+// C++11, C++14에서는 다음과 같이 initializer_list<int>가 실행된다.
+// Copy list initialization
+auto a = {11};      // initializer_list<int>
+auto b = {11, 22};  // initializer_list<int>
+// Direct list initialization
+auto c {11};        // initializer_list<int>
+auto d {11, 22};    // initializer_list<int>
 ```
